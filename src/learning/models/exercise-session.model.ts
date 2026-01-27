@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType, Int } from '@nestjs/graphql';
 import { User } from '../../auth/models/user.model';
+import GraphQLJSON from 'graphql-type-json';
 
 @ObjectType()
 export class ExerciseSession {
@@ -24,8 +25,8 @@ export class ExerciseSession {
   @Field(() => Int)
   timeSpentSeconds: number;
 
-  @Field({ description: 'JSON string of answers' })
-  answers: string;
+  @Field(() => GraphQLJSON, { description: 'JSON string of answers' })
+  answers: any;
 
   @Field(() => User, { nullable: true })
   user?: User;

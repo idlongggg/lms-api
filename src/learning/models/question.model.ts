@@ -1,6 +1,7 @@
 import { Field, ID, ObjectType, Int, registerEnumType } from '@nestjs/graphql';
 import { QuestionType } from '@prisma/client';
 import { Lesson } from './lesson.model';
+import GraphQLJSON from 'graphql-type-json';
 
 registerEnumType(QuestionType, { name: 'QuestionType' });
 
@@ -18,11 +19,11 @@ export class Question {
   @Field()
   content: string;
 
-  @Field({ description: 'JSON string of options' })
-  options: string;
+  @Field(() => GraphQLJSON, { description: 'JSON string of options' })
+  options: any;
 
-  @Field({ description: 'JSON string of correct answer' })
-  correctAnswer: string;
+  @Field(() => GraphQLJSON, { description: 'JSON string of correct answer' })
+  correctAnswer: any;
 
   @Field({ nullable: true })
   explanation?: string;

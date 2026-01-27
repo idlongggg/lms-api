@@ -1,6 +1,7 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { TenantStatus } from '@prisma/client';
 import { User } from '../../auth/models/user.model';
+import GraphQLJSON from 'graphql-type-json';
 
 registerEnumType(TenantStatus, {
   name: 'TenantStatus',
@@ -23,10 +24,8 @@ export class Tenant {
   @Field(() => TenantStatus)
   status: TenantStatus;
 
-  // settings is JSON, often handled as String or custom Scalar in GraphQL
-  // For simplicity we can use String or GraphQLJSON if we install graphql-type-json
-  @Field({ nullable: true })
-  settings?: string;
+  @Field(() => GraphQLJSON, { nullable: true })
+  settings?: any;
 
   @Field()
   createdAt: Date;

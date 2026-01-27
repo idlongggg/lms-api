@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { User } from '../../auth/models/user.model';
+import GraphQLJSON from 'graphql-type-json';
 
 @ObjectType()
 export class LearningPath {
@@ -12,8 +13,8 @@ export class LearningPath {
   @Field()
   subjectId: string;
 
-  @Field({ description: 'JSON string of lessons' })
-  lessons: string;
+  @Field(() => GraphQLJSON, { description: 'JSON string of lessons' })
+  lessons: any;
 
   @Field()
   generatedAt: Date;
