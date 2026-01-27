@@ -1,0 +1,82 @@
+type Subject {
+  id: UUID!
+  name: String!
+  grade: Int!
+  curriculum: String
+  topics: [Topic!]!
+}
+
+type Topic {
+  id: UUID!
+  subjectId: UUID!
+  subject: Subject!
+  name: String!
+  order: Int!
+  lessons: [Lesson!]!
+}
+
+type Lesson {
+  id: UUID!
+  topicId: UUID!
+  topic: Topic!
+  title: String!
+  content: String
+  status: LessonStatus!
+  questions: [Question!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  media: [Media!]
+}
+
+type Media {
+  id: UUID!
+  type: String!
+  url: String!
+  size: Int!
+  metadata: JSON
+}
+
+type Question {
+  id: UUID!
+  lessonId: UUID!
+  type: QuestionType!
+  content: String!
+  answers: [Answer!]!
+}
+
+type Answer {
+  id: UUID!
+  text: String!
+  isCorrect: Boolean!
+}
+
+input CreateLessonInput {
+  topicId: UUID!
+  title: String!
+  content: String
+}
+
+input UpdateLessonInput {
+  title: String
+  content: String
+}
+
+input AnswerInput {
+  questionId: UUID!
+  answer: String!
+}
+
+extend type Query {
+  subjects: [Subject!]!
+  topics(subjectId: UUID): [Topic!]!
+  lessons(topicId: UUID): [Lesson!]!
+  lesson(id: UUID!): Lesson
+  searchQuestions(query: String!, type: QuestionType): [Question!]!
+}
+
+extend type Mutation {
+  createLesson(input: CreateLessonInput!): Lesson!
+  updateLesson(id: UUID!, input: UpdateLessonInput!): Lesson!
+  publishLesson(id: UUID!): Lesson!
+  importQuestions(file: String!): Boolean!
+}

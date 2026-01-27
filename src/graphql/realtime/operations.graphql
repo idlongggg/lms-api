@@ -1,0 +1,29 @@
+query GetNotifications {
+  notifications {
+    id
+    type
+    content
+    readAt
+    createdAt
+  }
+}
+
+mutation MarkNotificationRead($id: UUID!) {
+  markNotificationRead(id: $id) {
+    id
+    readAt
+  }
+}
+
+mutation DeleteNotification($id: UUID!) {
+  deleteNotification(id: $id)
+}
+
+subscription OnNotification {
+  notificationReceived {
+    id
+    type
+    content
+    createdAt
+  }
+}

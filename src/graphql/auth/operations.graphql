@@ -1,0 +1,74 @@
+fragment UserBasic on User {
+  id
+  email
+  status
+  roles {
+    role
+  }
+}
+
+mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+    refreshToken
+    user {
+      ...UserBasic
+      profile {
+        exp
+        level
+        coins
+      }
+    }
+  }
+}
+
+mutation Register($input: RegisterInput!) {
+  register(input: $input) {
+    id
+    email
+    status
+  }
+}
+
+mutation RefreshToken {
+  refreshToken {
+    accessToken
+    refreshToken
+    user {
+      ...UserBasic
+    }
+  }
+}
+
+mutation Logout {
+  logout
+}
+
+query GetMe {
+  me {
+    ...UserBasic
+    tenantId
+    tenant {
+      id
+      name
+    }
+    profile {
+      exp
+      level
+      coins
+    }
+  }
+}
+
+query GetSessions {
+  sessions {
+    id
+    deviceId
+    lastActivity
+    createdAt
+  }
+}
+
+mutation RevokeSession($id: UUID!) {
+  revokeSession(id: $id)
+}

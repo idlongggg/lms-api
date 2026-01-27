@@ -1,0 +1,62 @@
+type LearningPath {
+  id: UUID!
+  userId: UUID!
+  subjectId: UUID!
+  lessons: [Lesson!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LessonProgress {
+  id: UUID!
+  userId: UUID!
+  lessonId: UUID!
+  lesson: Lesson!
+  status: ProgressStatus!
+  score: Float
+  completedAt: DateTime
+}
+
+type ExerciseSession {
+  id: UUID!
+  userId: UUID!
+  lessonId: UUID!
+  startedAt: DateTime!
+  completedAt: DateTime
+  answers: [SubmissionAnswer!]!
+}
+
+type SubmissionAnswer {
+  questionId: UUID!
+  answer: String!
+  isCorrect: Boolean!
+}
+
+type ExerciseResult {
+  sessionId: UUID!
+  score: Float!
+  correctCount: Int!
+  totalCount: Int!
+  results: [SubmissionAnswer!]!
+}
+
+input SubmitAnswersInput {
+  answers: [AnswerInput!]!
+}
+
+extend type Query {
+  progress: [LessonProgress!]!
+  learningPath(subjectId: UUID!): LearningPath
+  lessonContent(id: UUID!): Lesson
+  lessonExercises(id: UUID!): [Question!]!
+  recommendations: [Lesson!]!
+}
+
+extend type Mutation {
+  completeLesson(id: UUID!): LessonProgress!
+  submitExercise(lessonId: UUID!, input: SubmitAnswersInput!): ExerciseResult!
+}
+
+extend type Subscription {
+  progressUpdated: LessonProgress!
+}

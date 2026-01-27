@@ -1,0 +1,45 @@
+query GetProgressOverview {
+  progressOverview {
+    totalLessons
+    completedLessons
+    averageScore
+    totalTimeSpent
+    currentStreak
+  }
+}
+
+query GetSubjectProgress($subjectId: UUID!) {
+  subjectProgress(subjectId: $subjectId) {
+    id
+    lessonId
+    status
+    score
+    lesson {
+      ...LessonBasic
+    }
+  }
+}
+
+query GetKnowledgeMap {
+  knowledgeMap {
+    topicId
+    masteryScore
+    topic {
+      id
+      name
+      subject {
+        id
+        name
+      }
+    }
+  }
+}
+
+query GetDailyStats($startDate: DateTime, $endDate: DateTime) {
+  dailyStats(startDate: $startDate, endDate: $endDate) {
+    date
+    lessonsCompleted
+    timeSpent
+    expEarned
+  }
+}

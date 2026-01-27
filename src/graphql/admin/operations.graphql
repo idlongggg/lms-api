@@ -1,0 +1,51 @@
+fragment TenantBasic on Tenant {
+  id
+  code
+  name
+  status
+}
+
+query GetTenants($status: TenantStatus) {
+  tenants(status: $status) {
+    ...TenantBasic
+    domain
+    createdAt
+  }
+}
+
+query GetTenant($id: UUID!) {
+  tenant(id: $id) {
+    ...TenantBasic
+    domain
+    settings {
+      configJson
+    }
+    users {
+      id
+      email
+      status
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateTenant($input: CreateTenantInput!) {
+  createTenant(input: $input) {
+    ...TenantBasic
+  }
+}
+
+mutation UpdateTenant($id: UUID!, $input: UpdateTenantInput!) {
+  updateTenant(id: $id, input: $input) {
+    ...TenantBasic
+  }
+}
+
+mutation DeleteTenant($id: UUID!) {
+  deleteTenant(id: $id)
+}
+
+mutation ImportUsers($file: String!) {
+  importUsers(file: $file)
+}

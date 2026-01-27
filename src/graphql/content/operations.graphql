@@ -1,0 +1,83 @@
+fragment LessonBasic on Lesson {
+  id
+  title
+  status
+}
+
+fragment LessonFull on Lesson {
+  id
+  topicId
+  title
+  content
+  status
+  createdAt
+  updatedAt
+  topic {
+    id
+    name
+    subject {
+      id
+      name
+    }
+  }
+  media {
+    id
+    type
+    url
+  }
+}
+
+query GetSubjects {
+  subjects {
+    id
+    name
+    grade
+    curriculum
+  }
+}
+
+query GetTopics($subjectId: UUID) {
+  topics(subjectId: $subjectId) {
+    id
+    name
+    order
+    subject {
+      id
+      name
+    }
+  }
+}
+
+query GetLessons($topicId: UUID) {
+  lessons(topicId: $topicId) {
+    ...LessonBasic
+    topic {
+      id
+      name
+    }
+  }
+}
+
+query GetLesson($id: UUID!) {
+  lesson(id: $id) {
+    ...LessonFull
+    questions {
+      id
+      type
+      content
+      answers {
+        id
+        text
+      }
+    }
+  }
+}
+
+query SearchQuestions($query: String!, $type: QuestionType) {
+  searchQuestions(query: $query, type: $type) {
+    id
+    type
+    content
+    lessonId
+  }
+}

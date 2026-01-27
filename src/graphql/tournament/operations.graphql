@@ -1,0 +1,76 @@
+query GetTournaments($status: TournamentStatus) {
+  tournaments(status: $status) {
+    id
+    name
+    type
+    status
+    startTime
+    endTime
+  }
+}
+
+query GetTournament($id: UUID!) {
+  tournament(id: $id) {
+    id
+    name
+    type
+    status
+    startTime
+    endTime
+    rounds {
+      id
+      order
+      startTime
+    }
+    participants {
+      userId
+      score
+      rank
+      user {
+        id
+        email
+      }
+    }
+  }
+}
+
+query GetTournamentLeaderboard($tournamentId: UUID!) {
+  tournamentLeaderboard(tournamentId: $tournamentId) {
+    userId
+    score
+    rank
+    user {
+      id
+      email
+    }
+  }
+}
+
+mutation JoinTournament($tournamentId: UUID!) {
+  joinTournament(tournamentId: $tournamentId) {
+    id
+    userId
+    score
+    rank
+  }
+}
+
+mutation SubmitMatchAnswer($matchId: UUID!, $input: SubmitAnswersInput!) {
+  submitMatchAnswer(matchId: $matchId, input: $input) {
+    id
+    score
+    timeMs
+  }
+}
+
+subscription OnTournamentLeaderboard($tournamentId: UUID!) {
+  leaderboardUpdated(tournamentId: $tournamentId) {
+    userId
+    score
+    rank
+    user {
+      id
+      email
+    }
+  }
+}

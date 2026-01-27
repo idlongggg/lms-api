@@ -1,0 +1,66 @@
+type UserProfile {
+  userId: UUID!
+  exp: Int!
+  level: Int!
+  coins: Int!
+  badges: [UserBadge!]!
+  streak: Streak
+}
+
+type Badge {
+  id: UUID!
+  name: String!
+  criteria: String!
+  icon: String!
+}
+
+type UserBadge {
+  userId: UUID!
+  badgeId: UUID!
+  badge: Badge!
+  earnedAt: DateTime!
+}
+
+type Reward {
+  id: UUID!
+  name: String!
+  cost: Int!
+  type: String!
+  description: String
+}
+
+type RewardRedemption {
+  id: UUID!
+  userId: UUID!
+  rewardId: UUID!
+  reward: Reward!
+  status: String!
+  redeemedAt: DateTime!
+}
+
+type Streak {
+  userId: UUID!
+  currentStreak: Int!
+  longestStreak: Int!
+  lastActiveDate: DateTime
+}
+
+type LeaderboardEntry {
+  rank: Int!
+  userId: UUID!
+  user: User!
+  score: Int!
+}
+
+extend type Query {
+  profile: UserProfile!
+  badges: [UserBadge!]!
+  leaderboard(limit: Int): [LeaderboardEntry!]!
+  rewards: [Reward!]!
+  myRedemptions: [RewardRedemption!]!
+  streaks: Streak
+}
+
+extend type Mutation {
+  redeemReward(rewardId: UUID!): RewardRedemption!
+}

@@ -1,0 +1,21 @@
+type Notification {
+  id: UUID!
+  userId: UUID!
+  type: String!
+  content: String!
+  readAt: DateTime
+  createdAt: DateTime!
+}
+
+extend type Query {
+  notifications: [Notification!]!
+}
+
+extend type Mutation {
+  markNotificationRead(id: UUID!): Notification!
+  deleteNotification(id: UUID!): Boolean!
+}
+
+extend type Subscription {
+  notificationReceived: Notification!
+}

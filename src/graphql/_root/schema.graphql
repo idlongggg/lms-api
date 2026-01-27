@@ -1,0 +1,78 @@
+# =============================================================================
+# LMS GraphQL Schema - Root Definitions
+# =============================================================================
+
+# --- Scalars ---
+scalar DateTime
+scalar UUID
+scalar JSON
+
+# --- Enums ---
+
+# Auth Module
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  PENDING_DEACTIVATION
+}
+
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+# Content Module
+enum LessonStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  ESSAY
+}
+
+# Learning Module
+enum ProgressStatus {
+  LOCKED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+  REVIEW
+}
+
+# Tournament Module
+enum TournamentStatus {
+  SCHEDULED
+  REGISTRATION
+  IN_PROGRESS
+  COMPLETED
+}
+
+# --- Root Types ---
+type Query {
+  health: Boolean!
+}
+
+type Mutation {
+  _empty: String
+}
+
+type Subscription {
+  _empty: String
+}

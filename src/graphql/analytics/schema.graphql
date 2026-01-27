@@ -1,0 +1,39 @@
+type KnowledgeMap {
+  userId: UUID!
+  topicId: UUID!
+  topic: Topic!
+  masteryScore: Float!
+}
+
+type DailyStats {
+  userId: UUID!
+  date: DateTime!
+  lessonsCompleted: Int!
+  timeSpent: Int! # minutes
+  expEarned: Int!
+}
+
+type ProgressOverview {
+  totalLessons: Int!
+  completedLessons: Int!
+  averageScore: Float!
+  totalTimeSpent: Int!
+  currentStreak: Int!
+}
+
+type ClassReport {
+  classId: UUID!
+  totalStudents: Int!
+  averageProgress: Float!
+  averageScore: Float!
+  topPerformers: [User!]!
+  needsAttention: [User!]!
+}
+
+extend type Query {
+  progressOverview: ProgressOverview!
+  subjectProgress(subjectId: UUID!): [LessonProgress!]!
+  knowledgeMap: [KnowledgeMap!]!
+  dailyStats(startDate: DateTime, endDate: DateTime): [DailyStats!]!
+  classReport(classId: UUID!): ClassReport!
+}

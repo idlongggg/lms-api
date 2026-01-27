@@ -1,0 +1,318 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Tenant & Authentication
+model Tenant {
+  id        String       @id @default(cuid())
+  name      String
+  code      String       @unique
+  domain    String?
+  status    TenantStatus @default(ACTIVE)
+  settings  Json         @default("{}")
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  users     User[]
+}
+
+model User {
+  id              String     @id @default(cuid())
+  tenantId        String
+  email           String
+  password        String
+  name            String
+  status          UserStatus @default(PENDING)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  roles            UserRole[]
+  sessions         UserSession[]
+  learningPaths    LearningPath[]
+  lessonProgress   LessonProgress[]
+  exerciseSessions ExerciseSession[]
+  userBadges       UserBadge[]
+
+  @@unique([tenantId, email, deletedAt])
+  @@index([tenantId, status])
+}
+
+model UserRole {
+  id         String   @id @default(cuid())
+  userId     String
+  role       Role
+  tenantId   String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role, tenantId])
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  deviceId     String
+  deviceName   String
+  refreshToken String   @unique
+  isActive     Boolean  @default(true)
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, deviceId, isActive])
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  PENDING_DEACTIVATION
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+// Content Models
+model Subject {
+  id         String   @id @default(cuid())
+  tenantId   String
+  name       String
+  grade      Int
+  curriculum String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  topics Topic[]
+
+  @@index([tenantId, grade])
+}
+
+model Topic {
+  id        String   @id @default(cuid())
+  subjectId String
+  name      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  subject Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([subjectId, order])
+}
+
+model Lesson {
+  id               String       @id @default(cuid())
+  topicId          String
+  title            String
+  content          String       @db.Text
+  status           LessonStatus @default(DRAFT)
+  passingScore     Int          @default(70)
+  estimatedMinutes Int          @default(30)
+  createdBy        String
+  publishedBy      String?
+  publishedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  topic     Topic      @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([topicId, status])
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  lessonId      String
+  type          QuestionType
+  content       String       @db.Text
+  options       Json         @default("[]")
+  correctAnswer Json
+  explanation   String?      @db.Text
+  order         Int          @default(0)
+  createdAt     DateTime     @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, order])
+}
+
+enum LessonStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  ESSAY
+}
+
+// Learning Progress Models
+model LearningPath {
+  id          String   @id @default(cuid())
+  userId      String
+  subjectId   String
+  lessons     Json     @default("[]")
+  generatedAt DateTime @default(now())
+  validUntil  DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, subjectId])
+}
+
+model LessonProgress {
+  id          String         @id @default(cuid())
+  userId      String
+  lessonId    String
+  status      ProgressStatus @default(LOCKED)
+  bestScore   Int            @default(0)
+  attempts    Int            @default(0)
+  completedAt DateTime?
+  updatedAt   DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, status])
+}
+
+model ExerciseSession {
+  id               String    @id @default(cuid())
+  userId           String
+  lessonId         String
+  startedAt        DateTime  @default(now())
+  submittedAt      DateTime?
+  score            Int?
+  timeSpentSeconds Int       @default(0)
+  answers          Json      @default("[]")
+
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissionHistory SubmissionHistory[]
+
+  @@index([userId, lessonId])
+}
+
+model SubmissionHistory {
+  id         String  @id @default(cuid())
+  sessionId  String
+  questionId String
+  answer     String
+  isCorrect  Boolean
+
+  session ExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+enum ProgressStatus {
+  LOCKED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+  REVIEW
+}
+
+// Tournament & Gamification Models
+model Tournament {
+  id              String           @id @default(cuid())
+  tenantId        String
+  name            String
+  status          TournamentStatus @default(DRAFT)
+  maxParticipants Int              @default(100)
+  startsAt        DateTime
+  endsAt          DateTime
+  createdBy       String
+  createdAt       DateTime         @default(now())
+
+  rounds CompetitionRound[]
+
+  @@index([tenantId, status])
+}
+
+model CompetitionRound {
+  id           String   @id @default(cuid())
+  tournamentId String
+  roundNumber  Int
+  startsAt     DateTime
+  endsAt       DateTime
+  questions    Json     @default("[]")
+
+  tournament   Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  participants Participant[]
+
+  @@unique([tournamentId, roundNumber])
+}
+
+model Participant {
+  id         String    @id @default(cuid())
+  roundId    String
+  userId     String
+  score      Int       @default(0)
+  rank       Int?
+  finishedAt DateTime?
+  joinedAt   DateTime  @default(now())
+
+  round CompetitionRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@unique([roundId, userId])
+  @@index([roundId, score])
+}
+
+model UserExp {
+  userId          String @id
+  totalExp        Int    @default(0)
+  level           Int    @default(1)
+  currentLevelExp Int    @default(0)
+  nextLevelExp    Int    @default(100)
+}
+
+model Badge {
+  id          String @id @default(cuid())
+  code        String @unique
+  name        String
+  description String
+  iconUrl     String
+  criteria    Json
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+}
+
+enum TournamentStatus {
+  DRAFT
+  REGISTRATION
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

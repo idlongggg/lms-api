@@ -1,0 +1,18 @@
+input CreateTenantInput {
+  code: String!
+  name: String!
+  domain: String
+}
+
+input UpdateTenantInput {
+  name: String
+  domain: String
+  status: TenantStatus
+}
+
+extend type Mutation {
+  createTenant(input: CreateTenantInput!): Tenant!
+  updateTenant(id: UUID!, input: UpdateTenantInput!): Tenant!
+  deleteTenant(id: UUID!): Boolean!
+  importUsers(file: String!): Boolean!
+}

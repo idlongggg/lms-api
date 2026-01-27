@@ -1,0 +1,78 @@
+type Tenant {
+  id: UUID!
+  code: String!
+  name: String!
+  status: TenantStatus!
+  domain: String
+  settings: TenantSettings
+  users: [User!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TenantSettings {
+  id: UUID!
+  tenantId: UUID!
+  configJson: JSON
+}
+
+type User {
+  id: UUID!
+  email: String!
+  tenantId: UUID!
+  tenant: Tenant!
+  status: UserStatus!
+  roles: [UserRole!]!
+  sessions: [UserSession!]!
+  profile: UserProfile
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type UserRole {
+  id: UUID!
+  userId: UUID!
+  role: Role!
+}
+
+type UserSession {
+  id: UUID!
+  userId: UUID!
+  deviceId: String!
+  lastActivity: DateTime!
+  createdAt: DateTime!
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  role: Role!
+}
+
+extend type Query {
+  me: User!
+  sessions: [UserSession!]!
+  tenants: [Tenant!]!
+  tenant(id: UUID!): Tenant
+}
+
+extend type Mutation {
+  login(input: LoginInput!): AuthPayload!
+  register(input: RegisterInput!): User!
+  refreshToken: AuthPayload!
+  logout: Boolean!
+  revokeSession(id: UUID!): Boolean!
+  linkParent(studentEmail: String!): Boolean!
+  impersonateUser(userId: UUID!): AuthPayload!
+}

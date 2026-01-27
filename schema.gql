@@ -1,0 +1,219 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Tenant {
+  id: ID!
+  name: String!
+  code: String!
+  domain: String
+  status: TenantStatus!
+  settings: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  users: [User!]
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type UserRole {
+  id: ID!
+  userId: String!
+  role: Role!
+  tenantId: String!
+  assignedAt: DateTime!
+  user: User
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+type UserSession {
+  id: ID!
+  userId: String!
+  deviceId: String!
+  deviceName: String!
+  refreshToken: String!
+  isActive: Boolean!
+  lastActiveAt: DateTime!
+  createdAt: DateTime!
+  expiresAt: DateTime!
+  user: User
+}
+
+type LearningPath {
+  id: ID!
+  userId: String!
+  subjectId: String!
+
+  """JSON string of lessons"""
+  lessons: String!
+  generatedAt: DateTime!
+  validUntil: DateTime!
+  user: User
+}
+
+type Subject {
+  id: ID!
+  tenantId: String!
+  name: String!
+  grade: Int!
+  curriculum: String!
+  order: Int!
+  createdAt: DateTime!
+  topics: [Topic!]
+}
+
+type Topic {
+  id: ID!
+  subjectId: String!
+  name: String!
+  order: Int!
+  createdAt: DateTime!
+  subject: Subject!
+  lessons: [Lesson!]
+}
+
+type Question {
+  id: ID!
+  lessonId: String!
+  type: QuestionType!
+  content: String!
+
+  """JSON string of options"""
+  options: String!
+
+  """JSON string of correct answer"""
+  correctAnswer: String!
+  explanation: String
+  order: Int!
+  createdAt: DateTime!
+  lesson: Lesson!
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  ESSAY
+}
+
+type Lesson {
+  id: ID!
+  topicId: String!
+  title: String!
+  content: String!
+  status: LessonStatus!
+  passingScore: Int!
+  estimatedMinutes: Int!
+  createdBy: String!
+  publishedBy: String
+  publishedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  topic: Topic!
+  questions: [Question!]
+}
+
+enum LessonStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+type LessonProgress {
+  id: ID!
+  userId: String!
+  lessonId: String!
+  status: ProgressStatus!
+  bestScore: Int!
+  attempts: Int!
+  completedAt: DateTime
+  updatedAt: DateTime!
+  lesson: Lesson!
+  user: User!
+}
+
+enum ProgressStatus {
+  LOCKED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+  REVIEW
+}
+
+type ExerciseSession {
+  id: ID!
+  userId: String!
+  lessonId: String!
+  startedAt: DateTime!
+  submittedAt: DateTime
+  score: Int
+  timeSpentSeconds: Int!
+
+  """JSON string of answers"""
+  answers: String!
+  user: User
+}
+
+type UserBadge {
+  id: ID!
+  userId: String!
+  badgeId: String!
+  awardedAt: DateTime!
+  user: User
+}
+
+type User {
+  id: ID!
+  tenantId: String!
+  email: String!
+  name: String!
+  status: UserStatus!
+  tenant: Tenant!
+  emailVerifiedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  roles: [UserRole!]
+  sessions: [UserSession!]
+  learningPaths: [LearningPath!]
+  lessonProgress: [LessonProgress!]
+  exerciseSessions: [ExerciseSession!]
+  userBadges: [UserBadge!]
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  PENDING_DEACTIVATION
+}
+
+type Query {
+  users: [User!]!
+  user(id: String!): User
+  subjects: [Subject!]!
+  topics: [Topic!]!
+  lessons: [Lesson!]!
+  questions: [Question!]!
+  lessonProgresses: [LessonProgress!]!
+  tenants: [Tenant!]!
+  tenant(id: String!): Tenant
+}

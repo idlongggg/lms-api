@@ -1,0 +1,74 @@
+query GetProfile {
+  profile {
+    userId
+    exp
+    level
+    coins
+    badges {
+      badgeId
+      earnedAt
+      badge {
+        id
+        name
+        icon
+      }
+    }
+    streak {
+      currentStreak
+      longestStreak
+    }
+  }
+}
+
+query GetBadges {
+  badges {
+    badgeId
+    earnedAt
+    badge {
+      id
+      name
+      criteria
+      icon
+    }
+  }
+}
+
+query GetLeaderboard($limit: Int) {
+  leaderboard(limit: $limit) {
+    rank
+    userId
+    score
+    user {
+      id
+      email
+    }
+  }
+}
+
+query GetRewards {
+  rewards {
+    id
+    name
+    cost
+    type
+    description
+  }
+}
+
+query GetStreaks {
+  streaks {
+    currentStreak
+    longestStreak
+    lastActiveDate
+  }
+}
+
+mutation RedeemReward($rewardId: UUID!) {
+  redeemReward(rewardId: $rewardId) {
+    id
+    status
+    reward {
+      name
+    }
+  }
+}

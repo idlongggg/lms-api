@@ -1,0 +1,84 @@
+query GetProgress {
+  progress {
+    id
+    lessonId
+    status
+    score
+    completedAt
+    lesson {
+      ...LessonBasic
+    }
+  }
+}
+
+query GetLearningPath($subjectId: UUID!) {
+  learningPath(subjectId: $subjectId) {
+    id
+    lessons {
+      ...LessonBasic
+    }
+  }
+}
+
+query GetLessonContent($id: UUID!) {
+  lessonContent(id: $id) {
+    ...LessonFull
+  }
+}
+
+query GetLessonExercises($id: UUID!) {
+  lessonExercises(id: $id) {
+    id
+    type
+    content
+    answers {
+      id
+      text
+    }
+  }
+}
+
+query GetRecommendations {
+  recommendations {
+    ...LessonBasic
+    topic {
+      id
+      name
+      subject {
+        id
+        name
+      }
+    }
+  }
+}
+
+mutation CompleteLesson($id: UUID!) {
+  completeLesson(id: $id) {
+    id
+    status
+    score
+    completedAt
+  }
+}
+
+mutation SubmitExercise($lessonId: UUID!, $input: SubmitAnswersInput!) {
+  submitExercise(lessonId: $lessonId, input: $input) {
+    sessionId
+    score
+    correctCount
+    totalCount
+    results {
+      questionId
+      isCorrect
+    }
+  }
+}
+
+subscription OnProgressUpdate {
+  progressUpdated {
+    id
+    lessonId
+    status
+    score
+  }
+}

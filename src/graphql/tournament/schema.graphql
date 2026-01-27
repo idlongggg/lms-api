@@ -1,0 +1,63 @@
+type Tournament {
+  id: UUID!
+  name: String!
+  type: String!
+  status: TournamentStatus!
+  startTime: DateTime!
+  endTime: DateTime!
+  rounds: [Round!]!
+  participants: [Participant!]!
+  createdAt: DateTime!
+}
+
+type Round {
+  id: UUID!
+  tournamentId: UUID!
+  order: Int!
+  startTime: DateTime!
+  questions: [Question!]!
+}
+
+type Participant {
+  id: UUID!
+  tournamentId: UUID!
+  userId: UUID!
+  user: User!
+  score: Float!
+  rank: Int
+}
+
+type MatchResult {
+  id: UUID!
+  roundId: UUID!
+  userId: UUID!
+  answers: [SubmissionAnswer!]!
+  score: Float!
+  timeMs: Int!
+}
+
+input CreateTournamentInput {
+  name: String!
+  type: String!
+  startTime: DateTime!
+  endTime: DateTime!
+}
+
+extend type Query {
+  tournaments(status: TournamentStatus): [Tournament!]!
+  tournament(id: UUID!): Tournament
+  tournamentMatches(tournamentId: UUID!): [Round!]!
+  tournamentLeaderboard(tournamentId: UUID!): [Participant!]!
+}
+
+extend type Mutation {
+  createTournament(input: CreateTournamentInput!): Tournament!
+  joinTournament(tournamentId: UUID!): Participant!
+  submitMatchAnswer(matchId: UUID!, input: SubmitAnswersInput!): MatchResult!
+}
+
+extend type Subscription {
+  tournamentStarted(tournamentId: UUID!): Tournament!
+  leaderboardUpdated(tournamentId: UUID!): [Participant!]!
+  matchUpdate(matchId: UUID!): MatchResult!
+}
