@@ -206,6 +206,44 @@ enum UserStatus {
   PENDING_DEACTIVATION
 }
 
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+}
+
+type AnswerFeedback {
+  questionId: ID!
+  isCorrect: Boolean!
+  correctAnswer: String
+}
+
+type ExerciseResult {
+  score: Int!
+  passed: Boolean!
+  feedback: [AnswerFeedback!]!
+}
+
+type UserProfile {
+  userId: ID!
+  exp: Int!
+  level: Int!
+  coins: Int!
+}
+
+type RewardRedemption {
+  id: ID!
+  userId: String!
+  rewardId: String!
+  status: RedemptionStatus!
+  redeemedAt: DateTime!
+}
+
+enum RedemptionStatus {
+  PENDING
+  FULFILLED
+}
+
 type Query {
   users: [User!]!
   user(id: String!): User
@@ -216,4 +254,46 @@ type Query {
   lessonProgresses: [LessonProgress!]!
   tenants: [Tenant!]!
   tenant(id: String!): Tenant
+  userProfile(userId: ID!): UserProfile!
+}
+
+type Mutation {
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  linkParent(studentEmail: String!, parentId: ID!): Boolean!
+  completeLesson(userId: ID!, lessonId: ID!): LessonProgress!
+  submitExercise(input: SubmitExerciseInput!): ExerciseResult!
+  redeemReward(userId: ID!, rewardId: ID!): RewardRedemption!
+  createLesson(userId: ID!, input: CreateLessonInput!): Lesson!
+  publishLesson(lessonId: ID!, userId: ID!): Lesson!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  name: String!
+  tenantId: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input SubmitExerciseInput {
+  sessionId: ID!
+  answers: [AnswerInput!]!
+}
+
+input AnswerInput {
+  questionId: ID!
+  answer: String!
+}
+
+input CreateLessonInput {
+  topicId: ID!
+  title: String!
+  content: String!
+  passingScore: Int! = 70
+  estimatedMinutes: Int! = 30
 }
