@@ -7,7 +7,10 @@ import { Lesson } from '../learning/models/lesson.model';
 export class ContentService {
   constructor(private prisma: PrismaService) {}
 
-  async createLesson(userId: string, input: CreateLessonInput): Promise<Lesson> {
+  async createLesson(
+    userId: string,
+    input: CreateLessonInput,
+  ): Promise<Lesson> {
     return this.prisma.lesson.create({
       data: {
         ...input,
@@ -18,13 +21,13 @@ export class ContentService {
   }
 
   async publishLesson(lessonId: string, userId: string): Promise<Lesson> {
-      return this.prisma.lesson.update({
-          where: { id: lessonId },
-          data: {
-              status: LessonStatus.PUBLISHED,
-              publishedBy: userId,
-              publishedAt: new Date(),
-          }
-      }) as unknown as Lesson;
+    return this.prisma.lesson.update({
+      where: { id: lessonId },
+      data: {
+        status: LessonStatus.PUBLISHED,
+        publishedBy: userId,
+        publishedAt: new Date(),
+      },
+    }) as unknown as Lesson;
   }
 }

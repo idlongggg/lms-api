@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Subject, Topic, Lesson, Prisma, ProgressStatus } from '@prisma/client';
-import { SubmitExerciseInput, ExerciseResult, AnswerFeedback } from './dto/learning.dto';
+import {
+  SubmitExerciseInput,
+  ExerciseResult,
+  AnswerFeedback,
+} from './dto/learning.dto';
 
 @Injectable()
 export class LearningService {
@@ -92,11 +96,10 @@ export class LearningService {
       // Loose comparison for now.
       // In production, we'd specialized comparators based on QuestionType.
       // Prisma Json is `any`.
-      const dbAnswer = question.correctAnswer as any; 
+      const dbAnswer = question.correctAnswer as any;
       // If dbAnswer is string "A", matches, if JSON check stringify
-      const isCorrect = 
-         dbAnswer === ans.answer || 
-         JSON.stringify(dbAnswer) === ans.answer;
+      const isCorrect =
+        dbAnswer === ans.answer || JSON.stringify(dbAnswer) === ans.answer;
 
       if (isCorrect) correctCount++;
 
@@ -115,7 +118,10 @@ export class LearningService {
     }
 
     // Calculate score as percentage (0-100)
-    score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+    score =
+      totalQuestions > 0
+        ? Math.round((correctCount / totalQuestions) * 100)
+        : 0;
     const passed = score >= lesson.passingScore;
 
     // Update Session
@@ -130,15 +136,20 @@ export class LearningService {
 
     // Save History
     if (submissionData.length > 0) {
-        await this.prisma.submissionHistory.createMany({
-         data: submissionData,
-        });
+      await this.prisma.submissionHistory.createMany({
+        data: submissionData,
+      });
     }
-    
+
     // Update Progress if passed
     if (passed) {
       await this.prisma.lessonProgress.upsert({
-        where: { userId_lessonId: { userId: session.userId, lessonId: session.lessonId } },
+        where: {
+          userId_lessonId: {
+            userId: session.userId,
+            lessonId: session.lessonId,
+          },
+        },
         create: {
           userId: session.userId,
           lessonId: session.lessonId,
@@ -149,11 +160,11 @@ export class LearningService {
         update: {
           status: ProgressStatus.COMPLETED,
           // Only update bestScore if current score is higher
-          // Need to fetch previous first? 
+          // Need to fetch previous first?
           // For simplicity in this step, let's just update common fields.
         },
       });
-      
+
       // Separate update for bestScore to avoid reading first (optimization)
       // or just assume this overrides. Let's keep it simple for now.
     }

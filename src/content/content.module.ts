@@ -4,6 +4,6 @@ import { ContentResolver } from './content.resolver';
 
 @Module({
   providers: [ContentService, ContentResolver],
-  exports: [ContentService]
+  exports: [ContentService],
 })
 export class ContentModule {}

@@ -14,7 +14,7 @@ export class GamificationResolver {
   @Mutation(() => RewardRedemption)
   async redeemReward(
     @Args('userId', { type: () => ID }) userId: string,
-    @Args('rewardId', { type: () => ID }) rewardId: string
+    @Args('rewardId', { type: () => ID }) rewardId: string,
   ) {
     return this.gamificationService.redeemReward(userId, rewardId);
   }

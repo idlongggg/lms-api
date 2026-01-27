@@ -5,6 +5,6 @@ import { GamificationResolver } from './gamification.resolver';
 
 @Module({
   providers: [GamificationService, GamificationResolver],
-  exports: [GamificationService]
+  exports: [GamificationService],
 })
 export class GamificationModule {}

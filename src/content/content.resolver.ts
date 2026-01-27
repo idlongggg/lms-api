@@ -9,8 +9,8 @@ export class ContentResolver {
 
   @Mutation(() => Lesson)
   async createLesson(
-      @Args('userId', { type: () => ID }) userId: string, // Temporary: explicit userId until AuthGuard
-      @Args('input') input: CreateLessonInput
+    @Args('userId', { type: () => ID }) userId: string, // Temporary: explicit userId until AuthGuard
+    @Args('input') input: CreateLessonInput,
   ) {
     return this.contentService.createLesson(userId, input);
   }

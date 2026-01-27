@@ -1,4 +1,12 @@
-import { Resolver, Query, Args, ResolveField, Parent, Mutation, ID } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Args,
+  ResolveField,
+  Parent,
+  Mutation,
+  ID,
+} from '@nestjs/graphql';
 import { LearningService } from './learning.service';
 import { Subject } from './models/subject.model';
 import { Topic } from './models/topic.model';
