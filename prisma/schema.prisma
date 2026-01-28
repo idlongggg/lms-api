@@ -31,13 +31,17 @@ model User {
   updatedAt       DateTime   @updatedAt
   deletedAt       DateTime?
 
-  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  tenant           Tenant             @relation(fields: [tenantId], references: [id])
   roles            UserRole[]
   sessions         UserSession[]
   learningPaths    LearningPath[]
   lessonProgress   LessonProgress[]
   exerciseSessions ExerciseSession[]
   userBadges       UserBadge[]
+  userProfile      UserProfile?
+  redemptions      RewardRedemption[]
+  streak           Streak?
+  knowledgeMaps    KnowledgeMap[]
 
   @@unique([tenantId, email, deletedAt])
   @@index([tenantId, status])
@@ -75,6 +79,7 @@ enum TenantStatus {
   ACTIVE
   SUSPENDED
   PENDING
+  DELETED
 }
 
 enum UserStatus {
@@ -227,6 +232,16 @@ model SubmissionHistory {
   session ExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
+model KnowledgeMap {
+  id           String   @id @default(cuid())
+  userId       String
+  topicId      String
+  masteryScore Float
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 enum ProgressStatus {
   LOCKED
   AVAILABLE
@@ -281,12 +296,16 @@ model Participant {
   @@index([roundId, score])
 }
 
-model UserExp {
-  userId          String @id
-  totalExp        Int    @default(0)
-  level           Int    @default(1)
-  currentLevelExp Int    @default(0)
-  nextLevelExp    Int    @default(100)
+model UserProfile {
+  userId          String   @id
+  exp             Int      @default(0)
+  level           Int      @default(1)
+  coins           Int      @default(0)
+  currentLevelExp Int      @default(0)
+  nextLevelExp    Int      @default(100)
+  updatedAt       DateTime @updatedAt // Mapped to updated_at in D2 usually
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Badge {
@@ -307,6 +326,45 @@ model UserBadge {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, badgeId])
+}
+
+model Reward {
+  id          String             @id @default(cuid())
+  name        String
+  cost        Int
+  type        RewardType
+  isActive    Boolean            @default(true)
+  redemptions RewardRedemption[]
+}
+
+model RewardRedemption {
+  id         String           @id @default(cuid())
+  userId     String
+  rewardId   String
+  status     RedemptionStatus @default(PENDING)
+  redeemedAt DateTime         @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward Reward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+}
+
+model Streak {
+  userId        String   @id
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  lastActive    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum RewardType {
+  DIGITAL
+  PHYSICAL
+}
+
+enum RedemptionStatus {
+  PENDING
+  FULFILLED
 }
 
 enum TournamentStatus {

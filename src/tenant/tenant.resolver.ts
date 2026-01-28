@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Args } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { Tenant } from './models/tenant.model';
@@ -14,6 +14,7 @@ export class TenantResolver {
 
   @Query(() => [Tenant], { name: 'tenants' })
   @RequirePermissions(Permission.TENANT_READ)
+  // SSoT: ../../../docs/spec/modules/admin.md #Lifecycle-Sequence
   async getTenants() {
     return this.tenantService.findAll({});
   }

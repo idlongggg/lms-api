@@ -217,6 +217,25 @@ type AuthPayload {
   user: User!
 }
 
+type LearningProgress {
+  totalLessons: Int!
+  completedLessons: Int!
+  averageScore: Int!
+  recentActivity: [LessonProgress!]!
+}
+
+type Exercise {
+  sessionId: ID!
+  questions: [Question!]!
+  timeLimit: Int
+}
+
+type LessonRecommendation {
+  lesson: Lesson!
+  reason: String
+  matchScore: Float!
+}
+
 type AnswerFeedback {
   questionId: ID!
   isCorrect: Boolean!
@@ -234,6 +253,28 @@ type UserProfile {
   exp: Int!
   level: Int!
   coins: Int!
+  expToNextLevel: Int!
+}
+
+type Badge {
+  id: ID!
+  name: String!
+  code: String!
+  description: String!
+  iconUrl: String!
+  criteria: JSON!
+}
+
+type Reward {
+  id: ID!
+  name: String!
+  cost: Int!
+  type: RewardType!
+}
+
+enum RewardType {
+  DIGITAL
+  PHYSICAL
 }
 
 type RewardRedemption {
@@ -249,28 +290,60 @@ enum RedemptionStatus {
   FULFILLED
 }
 
+type LeaderboardEntry {
+  rank: Int!
+  userId: ID!
+  username: String!
+  score: Int!
+  avatarUrl: String
+}
+
+type StreakInfo {
+  currentStreak: Int!
+  longestStreak: Int!
+  lastActiveDate: DateTime
+}
+
 type Query {
   users: [User!]!
   user(id: String!): User
+  sessions: [UserSession!]!
   subjects: [Subject!]!
   topics: [Topic!]!
   lessons: [Lesson!]!
+  learningProgress: LearningProgress!
+  lessonContent(id: ID!): Lesson!
+  lessonExercise(lessonId: ID!): Exercise!
+  recommendations: [LessonRecommendation!]!
   questions: [Question!]!
   lessonProgresses: [LessonProgress!]!
   tenants: [Tenant!]!
   tenant(id: String!): Tenant
-  userProfile(userId: ID!): UserProfile!
+  userProfile: UserProfile!
+  badges: [Badge!]!
+  rewards: [Reward!]!
+  streaks: StreakInfo!
+  leaderboard(type: LeaderboardType!, limit: Int): [LeaderboardEntry!]!
+}
+
+enum LeaderboardType {
+  WEEKLY
+  MONTHLY
+  ALL_TIME
 }
 
 type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
   linkParent(studentEmail: String!, parentId: ID!): Boolean!
-  completeLesson(userId: ID!, lessonId: ID!): LessonProgress!
+  refreshToken(token: String!): AuthPayload!
+  logout: Boolean!
+  revokeSession(id: ID!): Boolean!
+  completeLesson(lessonId: ID!): LessonProgress!
   submitExercise(input: SubmitExerciseInput!): ExerciseResult!
-  redeemReward(userId: ID!, rewardId: ID!): RewardRedemption!
-  createLesson(userId: ID!, input: CreateLessonInput!): Lesson!
-  publishLesson(lessonId: ID!, userId: ID!): Lesson!
+  redeemReward(rewardId: ID!): RewardRedemption!
+  createLesson(input: CreateLessonInput!): Lesson!
+  publishLesson(lessonId: ID!): Lesson!
 }
 
 input RegisterInput {
@@ -278,11 +351,18 @@ input RegisterInput {
   password: String!
   name: String!
   tenantId: String!
+  role: String! = "STUDENT"
 }
 
 input LoginInput {
   email: String!
   password: String!
+  deviceInfo: DeviceInfoInput
+}
+
+input DeviceInfoInput {
+  deviceId: String!
+  deviceName: String!
 }
 
 input SubmitExerciseInput {

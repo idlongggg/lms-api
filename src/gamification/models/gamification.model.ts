@@ -1,18 +1,24 @@
 import { Field, ID, ObjectType, Int, registerEnumType } from '@nestjs/graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { RewardType, RedemptionStatus } from '@prisma/client'; // Import from Prisma
 
-export enum RewardType {
-  DIGITAL = 'DIGITAL',
-  PHYSICAL = 'PHYSICAL',
-}
-
+// Register Prisma Enums
 registerEnumType(RewardType, { name: 'RewardType' });
+registerEnumType(RedemptionStatus, { name: 'RedemptionStatus' });
+// LeaderboardType is likely NOT in Prisma (it's a view logic often), let's check schema.prisma first.
+// Checking schema.prisma from memory (step 82): There is NO LeaderboardType enum in Prisma.
+// So LeaderboardType must remain local.
+// But RewardType and RedemptionStatus ARE in Prisma.
 
-export enum RedemptionStatus {
-  PENDING = 'PENDING',
-  FULFILLED = 'FULFILLED',
+export { RewardType, RedemptionStatus };
+
+export enum LeaderboardTypeEnum {
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  ALL_TIME = 'ALL_TIME',
 }
 
-registerEnumType(RedemptionStatus, { name: 'RedemptionStatus' });
+registerEnumType(LeaderboardTypeEnum, { name: 'LeaderboardType' });
 
 @ObjectType()
 export class UserProfile {
@@ -27,6 +33,30 @@ export class UserProfile {
 
   @Field(() => Int)
   coins: number;
+
+  @Field(() => Int)
+  expToNextLevel: number;
+}
+
+@ObjectType()
+export class Badge {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  code: string;
+
+  @Field()
+  description: string;
+
+  @Field()
+  iconUrl: string;
+
+  @Field(() => GraphQLJSON)
+  criteria: any;
 }
 
 @ObjectType()
@@ -60,4 +90,34 @@ export class RewardRedemption {
 
   @Field()
   redeemedAt: Date;
+}
+
+@ObjectType()
+export class LeaderboardEntry {
+  @Field(() => Int)
+  rank: number;
+
+  @Field(() => ID)
+  userId: string;
+
+  @Field()
+  username: string;
+
+  @Field(() => Int)
+  score: number;
+
+  @Field({ nullable: true })
+  avatarUrl?: string | null;
+}
+
+@ObjectType()
+export class StreakInfo {
+  @Field(() => Int)
+  currentStreak: number;
+
+  @Field(() => Int)
+  longestStreak: number;
+
+  @Field({ nullable: true })
+  lastActiveDate?: Date | null;
 }

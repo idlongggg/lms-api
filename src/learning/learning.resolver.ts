@@ -13,7 +13,14 @@ import { Topic } from './models/topic.model';
 import { Lesson } from './models/lesson.model';
 import { Question } from './models/question.model';
 import { LessonProgress } from './models/lesson-progress.model';
+import { LearningProgress } from './models/learning-progress.model';
+import { Exercise } from './models/exercise.model';
+import { LessonRecommendation } from './models/recommendation.model';
 import { SubmitExerciseInput, ExerciseResult } from './dto/learning.dto';
+import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../auth/models/user.model';
 
 @Resolver(() => Subject)
 export class LearningResolver {
@@ -34,15 +41,49 @@ export class LearningResolver {
     return this.learningService.findAllLessons({});
   }
 
-  @Mutation(() => LessonProgress)
-  async completeLesson(
-    @Args('userId', { type: () => ID }) userId: string,
+  // Refactor: Add SSoT keys
+  @Query(() => LearningProgress, { name: 'learningProgress' })
+  @UseGuards(GqlAuthGuard)
+  // SSoT: ../../../docs/spec/modules/learning.md #Track-Progress
+  async getLearningProgress(@CurrentUser() user: User) {
+    return this.learningService.getLearningProgress(user.id);
+  }
+
+  @Query(() => Lesson, { name: 'lessonContent' })
+  async getLessonContent(@Args('id', { type: () => ID }) id: string) {
+    return this.learningService.getLessonContent(id);
+  }
+
+  @Query(() => Exercise, { name: 'lessonExercise' })
+  @UseGuards(GqlAuthGuard)
+  async getLessonExercise(
+    @CurrentUser() user: User,
     @Args('lessonId', { type: () => ID }) lessonId: string,
   ) {
-    return this.learningService.completeLesson(userId, lessonId);
+    // SSoT: ../../../docs/spec/modules/learning.md #Lifecycle-Sequence
+    return this.learningService.getLessonExercise(lessonId, user.id);
+  }
+
+  @Query(() => [LessonRecommendation], { name: 'recommendations' })
+  @UseGuards(GqlAuthGuard)
+  // SSoT: ../../../docs/spec/modules/learning.md #Adaptive-Path
+  async getRecommendations(@CurrentUser() user: User) {
+    return this.learningService.getRecommendations(user.id);
+  }
+
+  @Mutation(() => LessonProgress)
+  @UseGuards(GqlAuthGuard)
+  async completeLesson(
+    @CurrentUser() user: User,
+    @Args('lessonId', { type: () => ID }) lessonId: string,
+  ) {
+    // SSoT: ../../../docs/spec/modules/learning.md #Resume-Lesson
+    return this.learningService.completeLesson(user.id, lessonId);
   }
 
   @Mutation(() => ExerciseResult)
+  @UseGuards(GqlAuthGuard)
+  // SSoT: ../../../docs/spec/modules/learning.md #Submit-Exercise
   async submitExercise(@Args('input') input: SubmitExerciseInput) {
     return this.learningService.submitExercise(input);
   }

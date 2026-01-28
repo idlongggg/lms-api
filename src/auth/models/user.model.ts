@@ -32,7 +32,7 @@ export class User {
   tenant?: Tenant;
 
   @Field({ nullable: true })
-  emailVerifiedAt?: Date;
+  emailVerifiedAt?: Date | null;
 
   @Field()
   createdAt: Date;
@@ -41,7 +41,7 @@ export class User {
   updatedAt: Date;
 
   @Field({ nullable: true })
-  deletedAt?: Date;
+  deletedAt?: Date | null;
 
   @Field(() => [UserRole], { nullable: true })
   roles?: UserRole[];

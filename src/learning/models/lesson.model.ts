@@ -32,10 +32,10 @@ export class Lesson {
   createdBy: string;
 
   @Field({ nullable: true })
-  publishedBy?: string;
+  publishedBy?: string | null;
 
   @Field({ nullable: true })
-  publishedAt?: Date;
+  publishedAt?: Date | null;
 
   @Field()
   createdAt: Date;

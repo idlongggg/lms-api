@@ -26,7 +26,7 @@ export class LessonProgress {
   attempts: number;
 
   @Field({ nullable: true })
-  completedAt?: Date;
+  completedAt?: Date | null;
 
   @Field()
   updatedAt: Date;

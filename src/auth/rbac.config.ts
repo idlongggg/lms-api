@@ -13,6 +13,7 @@ export enum Permission {
   USER_UPDATE = 'USER_UPDATE',
   USER_DELETE = 'USER_DELETE',
   USER_ASSIGN_ROLE = 'USER_ASSIGN_ROLE',
+  USER_IMPERSONATE = 'USER_IMPERSONATE',
 
   // Content (Subject/Topic/Lesson)
   CONTENT_CREATE = 'CONTENT_CREATE',
@@ -44,6 +45,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.USER_UPDATE,
     Permission.USER_DELETE,
     Permission.USER_ASSIGN_ROLE,
+    Permission.USER_IMPERSONATE,
     Permission.CONTENT_CREATE,
     Permission.CONTENT_READ,
     Permission.CONTENT_UPDATE,

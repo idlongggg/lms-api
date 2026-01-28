@@ -1,15 +1,24 @@
-import { Injectable } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Subject, Topic, Lesson, Prisma, ProgressStatus } from '@prisma/client';
+import { Lesson, Prisma, ProgressStatus } from '@prisma/client';
 import {
   SubmitExerciseInput,
   ExerciseResult,
   AnswerFeedback,
 } from './dto/learning.dto';
+import { LearningProgress } from './models/learning-progress.model';
+import { Exercise } from './models/exercise.model';
+import { LessonRecommendation } from './models/recommendation.model';
+
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class LearningService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   // Subjects
   async findAllSubjects(params: { where?: Prisma.SubjectWhereInput }) {
@@ -34,7 +43,10 @@ export class LearningService {
 
   // Questions
   async findAllQuestions(params: { where?: Prisma.QuestionWhereInput }) {
-    return this.prisma.question.findMany({ where: params.where });
+    const questions = await this.prisma.question.findMany({
+      where: params.where,
+    });
+    return questions;
   }
 
   // Lesson Progress
@@ -44,9 +56,122 @@ export class LearningService {
     return this.prisma.lessonProgress.findMany({ where: params.where });
   }
 
+  // New Methods for Refactoring
+  // SSoT: ../../../docs/spec/modules/learning.md #Track-Progress
+  async getLearningProgress(userId: string): Promise<LearningProgress> {
+    const progress = await this.prisma.lessonProgress.findMany({
+      where: { userId },
+    });
+    const completed = progress.filter(
+      (p) => p.status === ProgressStatus.COMPLETED,
+    );
+    const totalScore = completed.reduce((sum, p) => sum + p.bestScore, 0);
+    const avgScore =
+      completed.length > 0 ? Math.round(totalScore / completed.length) : 0;
+
+    // Total lessons count (could be optimized)
+    const totalLessons = await this.prisma.lesson.count();
+
+    // Recent activity: last 5 items
+    const recent = await this.prisma.lessonProgress.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      take: 5,
+      include: { user: true }, // Relation needed for GQL model if strictly followed, but here passing specific fields
+    });
+
+    return {
+      totalLessons,
+      completedLessons: completed.length,
+      averageScore: avgScore,
+      recentActivity: recent,
+    };
+  }
+
+  async getLessonContent(id: string): Promise<Lesson> {
+    const lesson = await this.prisma.lesson.findUnique({ where: { id } });
+    if (!lesson) throw new NotFoundException('Lesson not found');
+    return lesson;
+  }
+
+  // Renamed to replace the old placeholder method
+  async getLessonExercise(
+    lessonId: string,
+    _userId: string,
+  ): Promise<Exercise> {
+    // SSoT: ../../../docs/spec/modules/learning.md #Lifecycle-Sequence
+    const session = await this.prisma.exerciseSession.create({
+      data: {
+        userId: _userId,
+        lessonId,
+        startedAt: new Date(),
+        timeSpentSeconds: 0,
+        answers: [],
+      },
+    });
+
+    const questions = await this.prisma.question.findMany({
+      where: { lessonId },
+      orderBy: { order: 'asc' },
+    });
+
+    return {
+      sessionId: session.id,
+      questions: questions as any,
+      timeLimit: 30, // hardcoded or from Lesson
+    };
+  }
+
+  // Overload/Update getLessonExercise to accept userId
+  async getLessonExerciseWithSession(
+    lessonId: string,
+    userId: string,
+  ): Promise<Exercise> {
+    const session = await this.prisma.exerciseSession.create({
+      data: {
+        userId,
+        lessonId,
+        startedAt: new Date(),
+        timeSpentSeconds: 0,
+        answers: [],
+      },
+    });
+
+    const questions = await this.prisma.question.findMany({
+      where: { lessonId },
+      orderBy: { order: 'asc' },
+    });
+
+    return {
+      sessionId: session.id,
+      questions: questions as any,
+      timeLimit: 30, // hardcoded or from Lesson
+    };
+  }
+
+  // SSoT: ../../../docs/spec/modules/learning.md #Adaptive-Path
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getRecommendations(_userId: string): Promise<LessonRecommendation[]> {
+    // Mock Recommendation
+    const nextLesson = await this.prisma.lesson.findFirst({
+      take: 1,
+    });
+
+    if (!nextLesson) return [];
+
+    return [
+      {
+        lesson: nextLesson,
+        matchScore: 0.95,
+        reason: 'Next in curriculum',
+      },
+    ];
+  }
+
   // Mutations
+  // SSoT: ../../../docs/spec/modules/learning.md #Resume-Lesson
   async completeLesson(userId: string, lessonId: string) {
-    return this.prisma.lessonProgress.upsert({
+    const result = await this.prisma.lessonProgress.upsert({
       where: { userId_lessonId: { userId, lessonId } },
       create: {
         userId,
@@ -58,8 +183,16 @@ export class LearningService {
         status: ProgressStatus.COMPLETED,
       },
     });
+
+    this.eventEmitter.emit('lesson.completed', {
+      userId,
+      lessonId,
+    });
+
+    return result;
   }
 
+  // SSoT: ../../../docs/spec/modules/learning.md #Submit-Exercise
   async submitExercise(input: SubmitExerciseInput): Promise<ExerciseResult> {
     const { sessionId, answers } = input;
 
@@ -96,7 +229,7 @@ export class LearningService {
       // Loose comparison for now.
       // In production, we'd specialized comparators based on QuestionType.
       // Prisma Json is `any`.
-      const dbAnswer = question.correctAnswer as any;
+      const dbAnswer = question.correctAnswer;
       // If dbAnswer is string "A", matches, if JSON check stringify
       const isCorrect =
         dbAnswer === ans.answer || JSON.stringify(dbAnswer) === ans.answer;
@@ -168,6 +301,16 @@ export class LearningService {
       // Separate update for bestScore to avoid reading first (optimization)
       // or just assume this overrides. Let's keep it simple for now.
     }
+
+    // Emit Event
+    this.eventEmitter.emit('exercise.submitted', {
+      userId: session.userId,
+      exerciseId: sessionId, // using sessionId as exercise reference
+      results: {
+        score,
+        passed,
+      },
+    });
 
     return {
       score,
